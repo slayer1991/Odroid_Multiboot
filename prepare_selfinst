@@ -93,8 +93,13 @@ if [ -b $sdcard ]; then
     # Test if requested drive is removable
     ISREMOVABLE=`udevadm info -a -n ${sdcard} | grep -o "ATTR{removable}==\"1\""`
     if [ ! "${ISREMOVABLE}" = "ATTR{removable}==\"1\"" ] ; then
-	    printf "\033[31m\033[1m%s IS NOT REMOVABLE DRIVE !, Exiting.\033[37m\033[22m\n" "${sdcard}"
-	    exit 1
+	    printf "\033[31m\033[1mWARNING: %s IS NOT REMOVABLE DRIVE !, Are you sure you want to continue (y/N)? \033[37m\033[22m\n" "${sdcard}"
+	    read -n 1 ANSWER
+
+	    if [ ! "${ANSWER}" = "y" ] ; then
+		echo "."
+		exit 1
+	    fi
     fi
 
     _sdok=`fdisk -l $sdcard  2> /dev/null | grep Disk`
@@ -119,9 +124,9 @@ fi
 
 if [ "${_isimage}" = "yes" ]; then
     echo "Creating image file...."
-    dd if=/dev/zero of=${sdcard}1 bs=1M count=${_image_size} > /dev/null 2>&1
-    dd if=/dev/zero of=${sdcard}0 bs=512 count=${part_start} > /dev/null 2>&1
-    mkfs -t vfat -n SELFINST ${sdcard}1 > /dev/null 2>&1
+    dd if=/dev/zero of=${sdcard}p1 bs=1M count=${_image_size} > /dev/null 2>&1
+    dd if=/dev/zero of=${sdcard}p0 bs=512 count=${part_start} > /dev/null 2>&1
+    mkfs -t vfat -n SELFINST ${sdcard}p1 > /dev/null 2>&1
     if [ $? -ne 0 ]; then
 		image_error_exit "  ERROR formating vfat partition."
     fi
@@ -179,9 +184,9 @@ if [ ! "${_isimage}" = "yes" ]; then
 
     echo ""
     echo "Formating partition ..."
-    dd if=/dev/zero of=${sdcard}1 bs=1M count=1 oflag=direct > /dev/null 2>&1
+    dd if=/dev/zero of=${sdcard}p1 bs=1M count=1 oflag=direct > /dev/null 2>&1
     sync
-    mkfs -t vfat -F 32 -n SELFINST ${sdcard}1 > /dev/null 2>&1
+    mkfs -t vfat -F 32 -n SELFINST ${sdcard}p1 > /dev/null 2>&1
     if [ $? -ne 0 ]; then
 		image_error_exit "  ERROR formating installer partition."
     fi
@@ -259,9 +264,9 @@ sync
 mkdir _mnt > /dev/null 2>&1
 
 echo ""
-mount ${sdcard}1 _mnt > /dev/null 2>&1
+mount ${sdcard}p1 _mnt > /dev/null 2>&1
 if [ $? -ne 0 ]; then
-    image_error_exit "ERROR mounting destination partition ${sdcard}1."
+    image_error_exit "ERROR mounting destination partition ${sdcard}p1."
     exit 1
 fi
 
@@ -271,7 +276,7 @@ mkdir _mnt/multiboot > /dev/null 2>&1
 
 cp -rf ${src_dir}/multiboot/* _mnt/multiboot > /dev/null 2>&1
 if [ $? -ne 0 ]; then
-    image_error_exit "ERROR installing multiboot files on ${sdcard}1."
+    image_error_exit "ERROR installing multiboot files on ${sdcard}p1."
     exit 1
 fi
 if [ ${o_device} = "xu4" ]; then
@@ -280,13 +285,13 @@ else
 	cp _mnt/multiboot/boot.ini.multi _mnt/boot.ini > /dev/null 2>&1
 fi
 if [ $? -ne 0 ]; then
-    image_error_exit "ERROR installing multiboot ini file on ${sdcard}1."
+    image_error_exit "ERROR installing multiboot ini file on ${sdcard}p1."
     exit 1
 fi
 
 umount _mnt > /dev/null 2>&1
 if [ $? -ne 0 ]; then
-    echo "umount ${sdcard}1, ERROR"
+    echo "umount ${sdcard}p1, ERROR"
 else
     rmdir _mnt
 fi
@@ -295,10 +300,10 @@ fi
 #=====================================================================================================================
 if [ "${_isimage}" = "yes" ]; then
     echo "Creating final image..."
-    dd if=${sdcard}0 of=${sdcard} > /dev/null 2>&1
-    dd if=${sdcard}1 of=${sdcard} conv=notrunc oflag=append > /dev/null 2>&1
-    rm ${sdcard}0 > /dev/null 2>&1
-    rm ${sdcard}1 > /dev/null 2>&1
+    dd if=${sdcard}p0 of=${sdcard} > /dev/null 2>&1
+    dd if=${sdcard}p1 of=${sdcard} conv=notrunc oflag=append > /dev/null 2>&1
+    rm ${sdcard}p0 > /dev/null 2>&1
+    rm ${sdcard}p1 > /dev/null 2>&1
 
     echo -e "o\nw" | fdisk ${sdcard} > /dev/null 2>&1
     echo -e "n\np\n1\n$part_start\n\nt\nc\nw" | fdisk ${sdcard} > /dev/null 2>&1
