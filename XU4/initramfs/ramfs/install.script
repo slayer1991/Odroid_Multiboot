@@ -2333,7 +2333,7 @@ if [ "${UPGRADE_ANDROID}" = "yes" ]; then
 	fi
 
 	_num_androinst=1
-	if [ -b /dev/disk/by-label/sdsystem ] && [ -b /dev/disk/by-label/emystem ]; then
+	if [ -b /dev/disk/by-label/sdsystem ] && [ -b /dev/disk/by-label/emsystem ]; then
 		_num_androinst=2
 	fi
 	if [ $_num_androinst -eq 2 ]; then
@@ -2350,7 +2350,7 @@ if [ "${UPGRADE_ANDROID}" = "yes" ]; then
                     _dest_data="/dev/disk/by-label/sddata"
 					break
 				elif [ "${A}" = "2" ]; then
-					_dest_system="/dev/disk/by-label/emystem"
+					_dest_system="/dev/disk/by-label/emsystem"
 					_dest_cache="/dev/disk/by-label/emcache"
                     _dest_data="/dev/disk/by-label/emdata"
 					break
@@ -2365,7 +2365,7 @@ if [ "${UPGRADE_ANDROID}" = "yes" ]; then
 			_dest_cache="/dev/disk/by-label/sdcache"
             _dest_data="/dev/disk/by-label/sddata"
 		else
-			_dest_system="/dev/disk/by-label/emystem"
+			_dest_system="/dev/disk/by-label/emsystem"
 			_dest_cache="/dev/disk/by-label/emcache"
             _dest_data="/dev/disk/by-label/emdata"
 		fi
