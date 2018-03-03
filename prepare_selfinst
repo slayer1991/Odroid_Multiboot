@@ -93,12 +93,13 @@ if [ -b $sdcard ]; then
     # Test if requested drive is removable
     ISREMOVABLE=`udevadm info -a -n ${sdcard} | grep -o "ATTR{removable}==\"1\""`
     if [ ! "${ISREMOVABLE}" = "ATTR{removable}==\"1\"" ] ; then
-	    printf "\033[31m\033[1mWARNING: %s IS NOT REMOVABLE DRIVE !, Are you sure you want to continue (y/N)? \033[37m\033[22m\n" "${sdcard}"
+	    printf "\033[31m\033[1mWARNING: %s IS NOT REMOVABLE DRIVE !, Are you sure you want to continue (y/N)? \033[37m\033[22m" "${sdcard}"
 	    read -n 1 ANSWER
 
 	    if [ ! "${ANSWER}" = "y" ] ; then
-		echo "."
-		exit 1
+	    	exit 1
+	    else
+	    	printf "\nBypass removable check...\n"
 	    fi
     fi
 
